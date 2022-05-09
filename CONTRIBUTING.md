@@ -13,9 +13,9 @@ Report bugs at https://github.com/sjdemartini/graphene-django-permissions/issues
 
 If you are reporting a bug, please include:
 
-* Your operating system name and version.
-* Any details about your local setup that might be helpful in troubleshooting.
-* Detailed steps to reproduce the bug.
+* Your installed version of Python, Django, and graphene_django_permissions
+* Any other details about your local setup that might be helpful in troubleshooting
+* Detailed steps to reproduce the bug
 
 ### Fix Bugs
 
@@ -30,7 +30,7 @@ and "help wanted" is open to whoever wants to implement it.
 ### Write Documentation
 
 Graphene Django Permissions could always use more documentation, whether as part of the
-official Graphene Django Permissions docs, in docstrings, or even on the web in blog posts,
+Graphene Django Permissions README, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 ### Submit Feedback
@@ -51,20 +51,20 @@ Ready to contribute? Here's how to set up `graphene-django-permissions` for loca
 1. Fork the `graphene-django-permissions` repo on GitHub.
 2. Clone your fork locally
 
-    ```
+    ```shell
     $ git clone git@github.com:your_name_here/graphene-django-permissions.git
     ```
 
 3. Ensure [poetry](https://python-poetry.org/docs/) is installed.
 4. Install dependencies and start your virtualenv:
 
-    ```
-    $ poetry install -E test -E doc -E dev
+    ```shell
+    $ poetry install -E test -E dev
     ```
 
 5. Create a branch for local development:
 
-    ```
+    ```shell
     $ git checkout -b name-of-your-bugfix-or-feature
     ```
 
@@ -73,13 +73,13 @@ Ready to contribute? Here's how to set up `graphene-django-permissions` for loca
 6. When you're done making changes, check that your changes pass the
    tests, including testing other Python versions, with tox:
 
-    ```
+    ```shell
     $ poetry run tox
     ```
 
 7. Commit your changes and push your branch to GitHub:
 
-    ```
+    ```shell
     $ git add .
     $ git commit -m "Your detailed description of your changes."
     $ git push origin name-of-your-bugfix-or-feature
@@ -101,11 +101,11 @@ Before you submit a pull request, check that it meets these guidelines:
 
 ## Tips
 
-```
+To run a subset of tests:
+
+```shell
 $ poetry run pytest tests/test_graphene_django_permissions.py
 ```
-
-To run a subset of tests.
 
 
 ## Deploying
@@ -114,7 +114,7 @@ A reminder for the maintainers on how to deploy.
 Make sure all your changes are committed (including an entry in CHANGELOG.md).
 Then run:
 
-```
+```shell
 $ poetry run bump2version patch # possible: major / minor / patch
 $ git push
 $ git push --tags
