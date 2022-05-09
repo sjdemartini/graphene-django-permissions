@@ -4,18 +4,18 @@ sources = graphene_django_permissions
 test: format lint unittest
 
 format:
-	isort $(sources) tests
-	black $(sources) tests
+	poetry run isort $(sources) tests
+	poetry run black $(sources) tests
 
 lint:
-	flake8 $(sources) tests
-	mypy $(sources) tests
+	poetry run flake8 $(sources) tests
+	poetry run mypy $(sources) tests
 
 unittest:
-	pytest
+	poetry run pytest
 
 coverage:
-	pytest --cov=$(sources) --cov-branch --cov-report=term-missing tests
+	poetry run pytest --cov=$(sources) --cov-branch --cov-report=term-missing tests
 
 pre-commit:
 	pre-commit run --all-files
