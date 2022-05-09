@@ -44,6 +44,15 @@ bump2version = "^1.0.1"
 graphene-django-optimizer = "^0.8.0"
 factory-boy = "^3.2.1"
 
+[tool.pytest.ini_options]
+addopts = "--ds=tests.settings"
+testpaths = [
+    "tests",
+]
+python_files = [
+    "test_*.py",
+]
+
 [tool.black]
 line-length = 88
 preview = true  # Format strings
