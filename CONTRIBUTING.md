@@ -59,7 +59,7 @@ Ready to contribute? Here's how to set up `graphene-django-permissions` for loca
 4. Install dependencies and start your virtualenv:
 
     ```shell
-    $ poetry install -E test -E dev
+    $ poetry install
     ```
 
 5. Create a branch for local development:
