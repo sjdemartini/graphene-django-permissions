@@ -46,23 +46,26 @@ factory-boy = "^3.2.1"
 
 [tool.black]
 line-length = 88
+preview = true  # Format strings
 target-version = ['py37', 'py38']
 include = '\.pyi?$'
 exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | build
+    | dist
+  )/
+  |
+  .*migrations.*  # Never format migrations files
+)
 '''
-preview = true
 
 [tool.isort]
 # Per https://pycqa.github.io/isort/docs/configuration/compatibility_black/ and
