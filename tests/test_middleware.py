@@ -1,4 +1,5 @@
 import json
+import re
 
 import pytest
 from django.test.client import Client
@@ -877,3 +878,113 @@ class TestGrapheneAuthorizationMiddleware:
         assert project_in_response["owner"] is not None
         assert project_in_response["owner"]["id"] == str(project.owner.id)
         assert len(project_in_response["expenses"]) == 0
+
+    def _assert_projects_with_expenses_sql_queries_match_expected(self, captured):
+        """
+        Validate that the SQL queries captured are what we expect, when querying for
+        projects with nested expenses.
+        """
+        assert len(captured.captured_queries) == 6
+
+        # Django should have queried for session- and user-data of the logged-in user
+        assert re.match(
+            r'SELECT .* FROM "django_session"', captured.captured_queries[0]["sql"]
+        )
+        assert re.match(
+            r'SELECT .* FROM "auth_user"', captured.captured_queries[1]["sql"]
+        )
+        # Django should have fetched all of the user's permissions (their own and their
+        # groups')
+        assert re.match(
+            r'SELECT .* FROM "auth_permission" INNER JOIN "auth_user_user_permissions"',
+            captured.captured_queries[2]["sql"],
+        )
+        assert re.match(
+            r'SELECT .* FROM "auth_permission" INNER JOIN "auth_group_permissions"',
+            captured.captured_queries[3]["sql"],
+        )
+
+        # We should have queried for all projects, joined with users for the owner data,
+        # using a single query
+        assert re.match(
+            r'SELECT .* FROM "tests_project" INNER JOIN "auth_user"',
+            captured.captured_queries[4]["sql"],
+        )
+
+        # We should have queried for all of the expenses of all of the projects, joined
+        # with users for the expense creator data, using a single query
+        assert re.match(
+            r'SELECT .* FROM "tests_expense" INNER JOIN "auth_user"',
+            captured.captured_queries[5]["sql"],
+        )
+
+    def test_sql_queries_are_still_optimized_when_user_has_permissions(
+        self, client: Client, django_assert_num_queries
+    ):
+        user = UserFactory(
+            permissions=[
+                "tests.view_project",
+                "tests.view_expense",
+                "auth.view_user",
+            ],
+        )
+        client.force_login(user)
+
+        # Create a couple projects and add expenses to them
+        project1 = ProjectFactory()
+        ExpenseFactory.create_batch(3, project=project1)
+        project2 = ProjectFactory()
+        ExpenseFactory.create_batch(2, project=project2)
+
+        with django_assert_num_queries(6) as captured:
+            response = graphql_query(
+                query=self._projects_with_expenses_query(),
+                client=client,
+            )
+
+        # Sanity-check that the response was valid
+        assert_graphql_response_has_no_errors(response)
+        content = json.loads(response.content)
+        projects_in_response = content["data"]["projects"]
+        assert len(projects_in_response) == 2
+        assert len(projects_in_response[0]["expenses"]) > 0
+
+        self._assert_projects_with_expenses_sql_queries_match_expected(captured)
+
+    def test_sql_queries_are_still_optimized_when_user_is_missing_permissions(
+        self, client: Client, django_assert_num_queries
+    ):
+        # Omit permission to view expenses, which should remove them from the response
+        user = UserFactory(
+            permissions=[
+                "tests.view_project",
+                "auth.view_user",
+            ],
+        )
+        client.force_login(user)
+
+        # Create a couple projects and add expenses to them
+        project1 = ProjectFactory()
+        ExpenseFactory.create_batch(3, project=project1)
+        project2 = ProjectFactory()
+        ExpenseFactory.create_batch(2, project=project2)
+
+        # The query-performance should be the same as it was when the user had all
+        # permissions. Gating the expenses should incur no additional SQL hit.
+        with django_assert_num_queries(6) as captured:
+            response = graphql_query(
+                query=self._projects_with_expenses_query(),
+                client=client,
+            )
+
+        # Sanity-check that the response was valid
+        assert_graphql_response_has_no_errors(response)
+        content = json.loads(response.content)
+        projects_in_response = content["data"]["projects"]
+        assert len(projects_in_response) == 2
+        # Expenses should be empty since the user does not have permission to view them
+        assert len(projects_in_response[0]["expenses"]) == 0
+
+        # The SQL query performance should be the same as when a user has all
+        # permission, still optimized
+        self._assert_projects_with_expenses_sql_queries_match_expected(captured)
