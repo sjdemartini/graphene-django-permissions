@@ -34,13 +34,16 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Get Changelog Entry
-        id: changelog_reader
-        uses: mindsers/changelog-reader-action@v2
-        with:
-          validation_depth: 10
-          version: ${{ steps.tag_name.outputs.current_version }}
-          path: ./CHANGELOG.md
+      # TODO(Steven DeMartini): This action seems to be broken, as it's failing to parse
+      # the verion(s) from the CHANGELOG. e.g. see
+      # https://github.com/sjdemartini/graphene-django-permissions/runs/6377463184
+      # Disabling for now, but ideally we can reenable later.
+      # - name: Get Changelog Entry
+      #   id: changelog_reader
+      #   uses: mindsers/changelog-reader-action@v2
+      #   with:
+      #     version: ${{ steps.tag_name.outputs.current_version }}
+      #     path: ./CHANGELOG.md
 
       - uses: actions/setup-python@v2
         with:
@@ -59,16 +62,16 @@ jobs:
         run: >-
           ls -l
 
-      - name: create github release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          body: ${{ steps.changelog_reader.outputs.changes }}
-          files: dist/*.whl
-          draft: false
-          prerelease: false
+      # - name: create github release
+      #   id: create_release
+      #   uses: softprops/action-gh-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     body: ${{ steps.changelog_reader.outputs.changes }}
+      #     files: dist/*.whl
+      #     draft: false
+      #     prerelease: false
 
       - name: publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
