@@ -104,7 +104,7 @@ Before you submit a pull request, check that it meets these guidelines:
 To run a subset of tests:
 
 ```shell
-$ poetry run pytest tests/test_graphene_django_permissions.py
+$ poetry run pytest tests/test_middleware.py
 ```
 
 
@@ -115,7 +115,7 @@ Make sure all your changes are committed (including an entry in CHANGELOG.md).
 Then run:
 
 ```shell
-$ poetry run bump2version patch # possible: major / minor / patch
+$ poetry run bump2version patch  # possible: major / minor / patch
 $ git push
 $ git push --tags
 ```
