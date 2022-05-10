@@ -33,7 +33,7 @@ class ProjectFactory(factory.django.DjangoModelFactory):
 
 
 class ExpenseFactory(factory.django.DjangoModelFactory):
-    creator = factory.SubFactory(UserFactory)
+    owner = factory.SubFactory(UserFactory)
     project = factory.SubFactory(ProjectFactory)
     amount = factory.Faker("pyint")
 

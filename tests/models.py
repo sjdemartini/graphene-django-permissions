@@ -9,7 +9,7 @@ class Project(models.Model):
 
 class Expense(models.Model):
     amount = models.IntegerField()
-    creator = models.ForeignKey(User, on_delete=models.PROTECT, related_name="expenses")
+    owner = models.ForeignKey(User, on_delete=models.PROTECT, related_name="expenses")
     project = models.ForeignKey(
         Project,
         null=True,

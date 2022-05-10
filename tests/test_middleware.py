@@ -2,6 +2,7 @@ import json
 import re
 
 import pytest
+from django.contrib.auth.backends import BaseBackend
 from django.test.client import Client
 from graphene_django.utils.testing import graphql_query
 
@@ -12,6 +13,38 @@ from tests.utils import (
 )
 
 pytestmark = pytest.mark.django_db
+
+
+# For testing object-level permissions, we'll implement our own authorization backend
+# that allows an object's "owner" to view it, even if they do not have sweeping
+# model-level view permissions. (See note here
+# https://docs.djangoproject.com/en/4.0/topics/auth/customizing/#handling-object-permissions
+# about handling object permissions in Django. Typically the authorization backend would
+# be implemented with a library like https://github.com/django-guardian/django-guardian
+# or https://github.com/dfunckt/django-rules.)
+class OwnerPermittedAuthBackend(BaseBackend):
+    def has_perm(self, user_obj, perm, obj=None):
+        if not obj:
+            return super().has_perm(user_obj, perm, obj)
+
+        if perm == "tests.view_project" or perm == "tests.view_expense":
+            # Allow a user access to view the specific object if they're the owner of
+            # that object
+            return obj.owner_id == user_obj.id
+
+        return super().has_perm(user_obj, perm, obj)
+
+
+@pytest.fixture
+def use_owner_permitted_auth_backend(settings):
+    """
+    Add the object-level permissioning authorization backend to the configured backends
+    in Django.
+    """
+    settings.AUTHENTICATION_BACKENDS = [
+        *settings.AUTHENTICATION_BACKENDS,
+        "test_middleware.OwnerPermittedAuthBackend",
+    ]
 
 
 class TestGrapheneAuthorizationMiddleware:
@@ -36,7 +69,7 @@ class TestGrapheneAuthorizationMiddleware:
                         amount
                         id
 
-                        creator {
+                        owner {
                             id
                             username
                         }
@@ -61,7 +94,7 @@ class TestGrapheneAuthorizationMiddleware:
                         amount
                         id
 
-                        creator {
+                        owner {
                             id
                             username
                         }
@@ -86,7 +119,7 @@ class TestGrapheneAuthorizationMiddleware:
                             amount
                             id
 
-                            creator {
+                            owner {
                                 id
                                 username
                             }
@@ -160,7 +193,7 @@ class TestGrapheneAuthorizationMiddleware:
                             amount
                             id
 
-                            creator {
+                            owner {
                                 id
                                 username
                             }
@@ -218,7 +251,7 @@ class TestGrapheneAuthorizationMiddleware:
         )
         assert project1_in_response["owner"] is not None
         assert len(project1_in_response["expenses"]) == 5
-        assert project1_in_response["expenses"][0]["creator"] is not None
+        assert project1_in_response["expenses"][0]["owner"] is not None
 
         project2_in_response = next(
             project
@@ -264,7 +297,7 @@ class TestGrapheneAuthorizationMiddleware:
         )
         assert project1_in_response["owner"] is not None
         assert len(project1_in_response["expenses"]) == 5
-        assert project1_in_response["expenses"][0]["creator"] is not None
+        assert project1_in_response["expenses"][0]["owner"] is not None
 
         project2_in_response = next(
             project
@@ -299,6 +332,44 @@ class TestGrapheneAuthorizationMiddleware:
         assert_graphql_response_has_no_errors(response)
         content = json.loads(response.content)
         assert len(content["data"]["projects"]) == 0
+
+    @pytest.mark.usefixtures("use_owner_permitted_auth_backend")
+    def test_top_level_list_field_contains_owned_objects_with_object_level_permissions(
+        self, client: Client
+    ):
+        """
+        When querying for a top-level List field, the list should contain objects that
+        are owned by the current user, respecting the custom object-permission
+        authorization backend when it's in place.
+        """
+        # Exclude permissions to view projects, the top-level model
+        user = UserFactory(
+            permissions=[
+                "tests.view_expense",
+                "auth.view_user",
+            ],
+        )
+        client.force_login(user)
+
+        # Mark the requesting user as the owner of one project, and only that one should
+        # be returned
+        project1 = ProjectFactory()
+        ExpenseFactory.create_batch(2, project=project1)
+        project2 = ProjectFactory()
+        ExpenseFactory.create_batch(2, project=project2)
+        project3 = ProjectFactory(owner=user)  # Owned by the requesting user
+        ExpenseFactory.create_batch(2, project=project3)
+
+        response = graphql_query(
+            self._projects_with_expenses_query(),
+            client=client,
+        )
+
+        assert_graphql_response_has_no_errors(response)
+        content = json.loads(response.content)
+        assert len(content["data"]["projects"]) == 1
+        assert content["data"]["projects"][0]["id"] == str(project3.id)
+        assert len(content["data"]["projects"][0]["expenses"]) == 2
 
     def test_top_level_list_field_is_empty_for_anonymous_user_without_permission(
         self, client: Client
@@ -356,7 +427,7 @@ class TestGrapheneAuthorizationMiddleware:
         assert project_in_response["id"] == str(project.id)
         assert project_in_response["owner"] is not None
         assert len(project_in_response["expenses"]) == 2
-        assert project_in_response["expenses"][0]["creator"] is not None
+        assert project_in_response["expenses"][0]["owner"] is not None
 
     def test_top_level_object_field_is_null_without_permission(self, client: Client):
         """
@@ -429,6 +500,77 @@ class TestGrapheneAuthorizationMiddleware:
         assert len(projects_in_response[0]["expenses"]) == 0
         assert len(projects_in_response[1]["expenses"]) == 0
 
+    @pytest.mark.usefixtures("use_owner_permitted_auth_backend")
+    def test_nested_related_model_list_includes_owned_objects_with_object_level_permission(
+        self, client: Client
+    ):
+        """
+        Verify that for queried nested/related lists, we return objects that are owned
+        by the current user, respecting the custom object-permission authorization
+        backend when it's in place.
+        """
+        # Omit the model-level expenses view-permission
+        user = UserFactory(
+            permissions=[
+                "tests.view_project",
+                "auth.view_user",
+            ],
+        )
+        client.force_login(user)
+
+        # Create a couple projects and add expenses to them, including some owned by the
+        # requesting user
+        project1 = ProjectFactory()
+        ExpenseFactory.create_batch(3, project=project1)
+        project1_user_owned_expenses = ExpenseFactory.create_batch(
+            2, project=project1, owner=user
+        )
+        project2 = ProjectFactory()
+        ExpenseFactory.create_batch(2, project=project2)
+        project2_user_owned_expenses = ExpenseFactory.create_batch(
+            1, project=project2, owner=user
+        )
+
+        response = graphql_query(
+            query=self._projects_with_expenses_query(),
+            client=client,
+        )
+
+        assert_graphql_response_has_no_errors(response)
+
+        content = json.loads(response.content)
+        projects_in_response = content["data"]["projects"]
+
+        # The projects should show up, and the list of expenses should match the ones
+        # owned by the user
+        assert len(projects_in_response) == 2
+        assert {project["id"] for project in projects_in_response} == {
+            str(project1.id),
+            str(project2.id),
+        }
+
+        project1_in_response = next(
+            project
+            for project in projects_in_response
+            if project["id"] == str(project1.id)
+        )
+        assert project1_in_response["owner"] is not None
+        assert len(project1_in_response["expenses"]) == 2
+        assert {expense["id"] for expense in project1_in_response["expenses"]} == {
+            str(expense.id) for expense in project1_user_owned_expenses
+        }
+
+        project2_in_response = next(
+            project
+            for project in projects_in_response
+            if project["id"] == str(project2.id)
+        )
+        assert project2_in_response["owner"] is not None
+        assert len(project2_in_response["expenses"]) == 1
+        assert {expense["id"] for expense in project2_in_response["expenses"]} == {
+            str(expense.id) for expense in project2_user_owned_expenses
+        }
+
     def test_nested_related_model_list_within_child_is_non_empty_with_permission_to_model(
         self, client: Client
     ):
@@ -448,7 +590,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         project = ProjectFactory()
         # Add some expenses created by the project owner
-        ExpenseFactory.create_batch(2, creator=project.owner)
+        ExpenseFactory.create_batch(2, owner=project.owner)
 
         response = graphql_query(
             self._project_with_owner_expenses_query(),
@@ -489,7 +631,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         project = ProjectFactory()
         # Add some expenses created by the project owner
-        ExpenseFactory.create_batch(2, creator=project.owner)
+        ExpenseFactory.create_batch(2, owner=project.owner)
 
         response = graphql_query(
             self._project_with_owner_expenses_query(),
@@ -836,7 +978,7 @@ class TestGrapheneAuthorizationMiddleware:
         assert project_in_response["owner"] is not None
         assert project_in_response["owner"]["id"] == str(project.owner.id)
         assert len(project_in_response["expenses"]) == 2
-        assert project_in_response["expenses"][0]["creator"] is not None
+        assert project_in_response["expenses"][0]["owner"] is not None
 
     def test_mutation_response_omits_impermissible_data(self, client: Client):
         """
@@ -912,7 +1054,7 @@ class TestGrapheneAuthorizationMiddleware:
         )
 
         # We should have queried for all of the expenses of all of the projects, joined
-        # with users for the expense creator data, using a single query
+        # with users for the expense owner data, using a single query
         assert re.match(
             r'SELECT .* FROM "tests_expense" INNER JOIN "auth_user"',
             captured.captured_queries[5]["sql"],
@@ -984,6 +1126,51 @@ class TestGrapheneAuthorizationMiddleware:
         assert len(projects_in_response) == 2
         # Expenses should be empty since the user does not have permission to view them
         assert len(projects_in_response[0]["expenses"]) == 0
+
+        # The SQL query performance should be the same as when a user has all
+        # permission, still optimized
+        self._assert_projects_with_expenses_sql_queries_match_expected(captured)
+
+    @pytest.mark.usefixtures("use_owner_permitted_auth_backend")
+    def test_sql_queries_are_still_optimized_when_using_object_level_permissions(
+        self, client: Client, django_assert_num_queries
+    ):
+        # Omit permission to view all expenses, which should restrict the ones shown to
+        # those that the user owns
+        user = UserFactory(
+            permissions=[
+                "tests.view_project",
+                "auth.view_user",
+            ],
+        )
+        client.force_login(user)
+
+        # Create a couple projects and add expenses to them, including some owned by the
+        # requesting user
+        project1 = ProjectFactory()
+        ExpenseFactory.create_batch(3, project=project1)
+        ExpenseFactory.create_batch(2, project=project1, owner=user)
+        project2 = ProjectFactory()
+        ExpenseFactory.create_batch(2, project=project2)
+        ExpenseFactory.create_batch(2, project=project2, owner=user)
+
+        # The query-performance should be the same as it was when the user had all
+        # model-level sweeping permissions, since the authorization backend doesn't
+        # require any additional queries.
+        with django_assert_num_queries(6) as captured:
+            response = graphql_query(
+                query=self._projects_with_expenses_query(),
+                client=client,
+            )
+
+        # Sanity-check that the response was valid
+        assert_graphql_response_has_no_errors(response)
+        content = json.loads(response.content)
+        projects_in_response = content["data"]["projects"]
+        assert len(projects_in_response) == 2
+        # Expenses should contain only the ones owned by the user
+        assert len(projects_in_response[0]["expenses"]) == 2
+        assert len(projects_in_response[1]["expenses"]) == 2
 
         # The SQL query performance should be the same as when a user has all
         # permission, still optimized
