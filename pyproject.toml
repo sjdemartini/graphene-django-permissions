@@ -87,6 +87,7 @@ use_parentheses = true
 ensure_newline_before_comments = true
 line_length = 88
 skip_gitignore = true
+extend_skip_glob = ["*/migrations/*"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
