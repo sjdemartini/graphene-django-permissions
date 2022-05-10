@@ -25,7 +25,7 @@ class UserFactory(factory.django.DjangoModelFactory):
 
 
 class ProjectFactory(factory.django.DjangoModelFactory):
-    name = factory.Faker("words")
+    name = factory.Faker("sentence")
     owner = factory.SubFactory(UserFactory)
 
     class Meta:
