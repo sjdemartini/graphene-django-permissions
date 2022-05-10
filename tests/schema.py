@@ -28,14 +28,33 @@ class User(DjangoObjectType):
 
 
 class Query(graphene.ObjectType):
-    project = graphene.Field(Project)
-    expense = graphene.Field(Expense)
-    user = graphene.Field(User)
+    project = graphene.Field(Project, id=graphene.ID())
+    expense = graphene.Field(Expense, id=graphene.ID())
 
     projects = graphene.List(graphene.NonNull(Project), required=True)
     projects_list = graphene.List(graphene.NonNull(Project), required=True)
     expenses = graphene.List(graphene.NonNull(Expense), required=True)
     users = graphene.List(graphene.NonNull(User), required=True)
+
+    @staticmethod
+    def resolve_project(root, info, id: str):
+        try:
+            return gql_optimizer.query(
+                models.Project.objects.all().filter(id=id),
+                info,
+            ).get()
+        except models.Project.DoesNotExist:
+            return None
+
+    @staticmethod
+    def resolve_expense(root, info, id: str):
+        try:
+            return gql_optimizer.query(
+                models.Expense.objects.all().filter(id=id),
+                info,
+            ).get()
+        except models.Expense.DoesNotExist:
+            return None
 
     @staticmethod
     def resolve_projects(root, info):
@@ -75,7 +94,6 @@ class Query(graphene.ObjectType):
 
 
 class ProjectUpdateInput(graphene.InputObjectType):
-    id = graphene.ID(required=True)
     name = graphene.String(required=True)
 
 
@@ -87,18 +105,19 @@ class ProjectUpdateMutation(graphene.Mutation):
     )
 
     class Arguments:
+        id = graphene.ID(required=True)
         input = ProjectUpdateInput(required=True)
 
     @classmethod
-    def mutate(cls, root, info, input: ProjectUpdateInput):
-        project = models.Project.objects.get(id=input.id)
+    def mutate(cls, root, info, id: str, input: ProjectUpdateInput):
+        project = models.Project.objects.get(id=id)
         project.name = input.name
         project.save()
         return cls(project=project)
 
 
 class Mutation(graphene.ObjectType):
-    project_patch = ProjectUpdateMutation.Field()
+    project_update = ProjectUpdateMutation.Field()
 
 
 schema = Schema(query=Query, mutation=Mutation)
