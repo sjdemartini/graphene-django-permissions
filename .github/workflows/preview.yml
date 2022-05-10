@@ -6,7 +6,7 @@ name: stage & preview workflow
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master, main ]
+    branches: [master, main]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        python-versions: [ 3.8 ]
+        python-versions: [3.8]
 
     steps:
       - uses: actions/checkout@v2
@@ -32,8 +32,7 @@ jobs:
           pip install poetry tox tox-gh-actions
 
       - name: test with tox
-        run:
-          tox
+        run: tox
 
       - name: Build wheels and source tarball
         run: |
@@ -41,10 +40,11 @@ jobs:
           poetry version --short
           poetry build
 
-      - name: publish to Test PyPI
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_API_TOKEN}}
-          repository_url: https://test.pypi.org/legacy/
-          skip_existing: true
+      # TODO(Steven DeMartini): Add Test-PyPI support
+      # - name: publish to Test PyPI
+      #   uses: pypa/gh-action-pypi-publish@master
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.TEST_PYPI_API_TOKEN}}
+      #     repository_url: https://test.pypi.org/legacy/
+      #     skip_existing: true
