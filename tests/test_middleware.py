@@ -43,7 +43,7 @@ def use_owner_permitted_auth_backend(settings):
     """
     settings.AUTHENTICATION_BACKENDS = [
         *settings.AUTHENTICATION_BACKENDS,
-        "test_middleware.OwnerPermittedAuthBackend",
+        "tests.test_middleware.OwnerPermittedAuthBackend",
     ]
 
 
