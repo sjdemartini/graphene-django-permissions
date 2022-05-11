@@ -1,4 +1,3 @@
-import json
 import re
 
 import pytest
@@ -233,7 +232,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         assert_graphql_response_has_no_errors(response)
 
-        content = json.loads(response.content)
+        content = response.json()
         projects_in_response = content["data"]["projects"]
 
         # All of the projects and expenses should be visible, with their associated user
@@ -280,7 +279,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         assert_graphql_response_has_no_errors(response)
 
-        content = json.loads(response.content)
+        content = response.json()
         projects_in_response = content["data"]["projects"]
 
         # All of the projects and expenses should be visible
@@ -330,7 +329,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         # There should be no errors, but the top-level list should be empty
         assert_graphql_response_has_no_errors(response)
-        content = json.loads(response.content)
+        content = response.json()
         assert len(content["data"]["projects"]) == 0
 
     @pytest.mark.usefixtures("use_owner_permitted_auth_backend")
@@ -366,7 +365,7 @@ class TestGrapheneAuthorizationMiddleware:
         )
 
         assert_graphql_response_has_no_errors(response)
-        content = json.loads(response.content)
+        content = response.json()
         assert len(content["data"]["projects"]) == 1
         assert content["data"]["projects"][0]["id"] == str(project3.id)
         assert len(content["data"]["projects"][0]["expenses"]) == 2
@@ -391,7 +390,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         # There should be no errors, but the top-level list should be empty
         assert_graphql_response_has_no_errors(response)
-        content = json.loads(response.content)
+        content = response.json()
         assert len(content["data"]["projects"]) == 0
 
     def test_top_level_object_field_is_non_empty_with_permission(self, client: Client):
@@ -421,7 +420,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         # There should be no errors, but the top-level object should be empty
         assert_graphql_response_has_no_errors(response)
-        content = json.loads(response.content)
+        content = response.json()
         project_in_response = content["data"]["project"]
         assert project_in_response is not None
         assert project_in_response["id"] == str(project.id)
@@ -456,7 +455,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         # There should be no errors, but the top-level object should be empty
         assert_graphql_response_has_no_errors(response)
-        content = json.loads(response.content)
+        content = response.json()
         assert content["data"]["project"] is None
 
     def test_nested_related_model_list_is_empty_when_missing_permissions(
@@ -487,7 +486,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         assert_graphql_response_has_no_errors(response)
 
-        content = json.loads(response.content)
+        content = response.json()
         projects_in_response = content["data"]["projects"]
 
         # The projects should show up, but expenses should be empty
@@ -538,7 +537,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         assert_graphql_response_has_no_errors(response)
 
-        content = json.loads(response.content)
+        content = response.json()
         projects_in_response = content["data"]["projects"]
 
         # The projects should show up, and the list of expenses should match the ones
@@ -602,7 +601,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         assert_graphql_response_has_no_errors(response)
 
-        content = json.loads(response.content)
+        content = response.json()
         project_in_response = content["data"]["project"]
         assert project_in_response is not None
         assert project_in_response["id"] == str(project.id)
@@ -643,7 +642,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         assert_graphql_response_has_no_errors(response)
 
-        content = json.loads(response.content)
+        content = response.json()
         project_in_response = content["data"]["project"]
         assert project_in_response is not None
         assert project_in_response["id"] == str(project.id)
@@ -683,7 +682,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         assert_graphql_response_has_no_errors(response)
 
-        content = json.loads(response.content)
+        content = response.json()
         expense_in_response = content["data"]["expense"]
         assert expense_in_response["id"] == str(expense.id)
         assert expense_in_response["amount"] == expense.amount
@@ -727,7 +726,7 @@ class TestGrapheneAuthorizationMiddleware:
         # Verify that an error showed up for the expense's project owner (User), since
         # the user doesn't have permission
         assert_graphql_response_has_errors(response)
-        content = json.loads(response.content)
+        content = response.json()
         assert (
             "You do not have permission to access this field"
             in content["errors"][0]["message"]
@@ -777,7 +776,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         assert_graphql_response_has_no_errors(response)
 
-        content = json.loads(response.content)
+        content = response.json()
         expense_in_response = content["data"]["expense"]
         assert expense_in_response["id"] == str(expense.id)
         assert expense_in_response["project"] is not None
@@ -816,7 +815,7 @@ class TestGrapheneAuthorizationMiddleware:
         # response, since we can safely omit it and still satisfy the GQL schema
         assert_graphql_response_has_no_errors(response)
 
-        content = json.loads(response.content)
+        content = response.json()
         expense_in_response = content["data"]["expense"]
         assert expense_in_response["id"] == str(expense.id)
         assert expense_in_response["project"] is None
@@ -850,7 +849,7 @@ class TestGrapheneAuthorizationMiddleware:
         assert_graphql_response_has_no_errors(response)
 
         # All of the projects should show up
-        content = json.loads(response.content)
+        content = response.json()
         projects_in_response = content["data"]["projectsList"]
 
         assert len(projects_in_response) == 2
@@ -893,7 +892,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         assert_graphql_response_has_no_errors(response)
 
-        content = json.loads(response.content)
+        content = response.json()
         projects_in_response = content["data"]["projectsList"]
 
         assert len(projects_in_response) == 2
@@ -930,7 +929,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         assert_graphql_response_has_no_errors(response)
 
-        content = json.loads(response.content)
+        content = response.json()
         projects_in_response = content["data"]["projectsList"]
 
         # Since the user doesn't have permission to view projects, none should be
@@ -971,7 +970,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         # The response should contain all of the requested data, including the nested
         # user and expense data fields
-        content = json.loads(response.content)
+        content = response.json()
         project_in_response = content["data"]["projectUpdate"]["project"]
         assert project_in_response["id"] == str(project.id)
         assert project_in_response["name"] == new_name
@@ -1013,7 +1012,7 @@ class TestGrapheneAuthorizationMiddleware:
         assert project.name == new_name
 
         # The response, however, should omit the unauthorized expenses data
-        content = json.loads(response.content)
+        content = response.json()
         project_in_response = content["data"]["projectUpdate"]["project"]
         assert project_in_response["id"] == str(project.id)
         assert project_in_response["name"] == new_name
@@ -1086,7 +1085,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         # Sanity-check that the response was valid
         assert_graphql_response_has_no_errors(response)
-        content = json.loads(response.content)
+        content = response.json()
         projects_in_response = content["data"]["projects"]
         assert len(projects_in_response) == 2
         assert len(projects_in_response[0]["expenses"]) > 0
@@ -1121,7 +1120,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         # Sanity-check that the response was valid
         assert_graphql_response_has_no_errors(response)
-        content = json.loads(response.content)
+        content = response.json()
         projects_in_response = content["data"]["projects"]
         assert len(projects_in_response) == 2
         # Expenses should be empty since the user does not have permission to view them
@@ -1165,7 +1164,7 @@ class TestGrapheneAuthorizationMiddleware:
 
         # Sanity-check that the response was valid
         assert_graphql_response_has_no_errors(response)
-        content = json.loads(response.content)
+        content = response.json()
         projects_in_response = content["data"]["projects"]
         assert len(projects_in_response) == 2
         # Expenses should contain only the ones owned by the user
