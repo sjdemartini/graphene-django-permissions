@@ -26,7 +26,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.7,<4.0"
-graphene-django = "^2.15.0"
+graphene-django = {version = "^3.0.0*", allow-prereleases = true}
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
@@ -41,7 +41,8 @@ twine = "^4.0.0"
 pre-commit = "^2.19.0"
 toml = "^0.10.2"
 bump2version = "^1.0.1"
-graphene-django-optimizer = "^0.8.0"
+graphql-core = "~3.1.7"  # 3.2+ appears to be incompatible with graphene currently
+graphene-django-optimizer = "^0.9.0"
 factory-boy = "^3.2.1"
 
 [tool.pytest.ini_options]
