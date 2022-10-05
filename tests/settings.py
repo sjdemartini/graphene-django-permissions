@@ -29,7 +29,7 @@ DATABASES = {
 }
 
 GRAPHENE = {
-    "SCHEMA": "schema.schema",
+    "SCHEMA": "tests.schema.schema",
     "MIDDLEWARE": [
         "graphene_django_permissions.middleware.GrapheneAuthorizationMiddleware",
     ],
