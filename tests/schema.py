@@ -12,16 +12,19 @@ from tests import models
 class Project(DjangoObjectType):
     class Meta:
         model = models.Project
+        fields = "__all__"
 
 
 class Expense(DjangoObjectType):
     class Meta:
         model = models.Expense
+        fields = "__all__"
 
 
 class User(DjangoObjectType):
     class Meta:
         model = UserModel
+        fields = "__all__"
 
 
 # Queries
