@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        python-versions: [3.8]
+        python-versions: [3.10]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v2
 
       # TODO(Steven DeMartini): This action seems to be broken, as it's failing to parse
-      # the verion(s) from the CHANGELOG. e.g. see
+      # the version(s) from the CHANGELOG. e.g. see
       # https://github.com/sjdemartini/graphene-django-permissions/runs/6377463184
       # Disabling for now, but ideally we can reenable later.
       # - name: Get Changelog Entry
