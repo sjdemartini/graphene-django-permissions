@@ -978,7 +978,7 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<4.0"
-content-hash = "b7c82be8a706b81e3bd04f8b5bc5e33f935456a71e0713d34845aaf18d0d163e"
+content-hash = "2666571dfff23f7fdfb12d681c9dc7fa1ff9b77c77228255d1f121998862a589"
 
 [metadata.files]
 aniso8601 = [
