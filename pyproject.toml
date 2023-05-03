@@ -31,7 +31,7 @@ graphene-django = ">=3.0.2"
 
 [tool.poetry.dev-dependencies]
 black = "22.12.0"
-mypy = "^0.950"
+mypy = "1.2.0"
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
 pytest-django = "^4.5.2"
@@ -76,6 +76,21 @@ exclude = '''
   .*migrations.*  # Never format migrations files
 )
 '''
+
+[tool.mypy]
+python_version = '3.7'
+check_untyped_defs = true
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+# For convenience, display the error codes of the violations. Makes it easier to
+# `type: ignore[specific-violation]` rather than use sweeping type-ignores.
+show_error_codes = true
+packages = [
+  "graphene_django_permissions",
+  "tests",
+]
 
 [tool.ruff]
 select = [
