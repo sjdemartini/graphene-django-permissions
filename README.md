@@ -37,8 +37,15 @@ See [here](https://docs.djangoproject.com/en/4.0/topics/auth/default/#default-pe
 ### Requirements
 
 * `python` (3.7+)
-* `graphene-django` (2.15) (until https://github.com/sjdemartini/graphene-django-permissions/issues/2 is resolved)
+* `graphene-django`  (see compatibility table below)
 * Graphene `Schema`s must **not** use Relay / Nodes (until https://github.com/sjdemartini/graphene-django-permissions/issues/1 is resolved)
+
+### Compatibility
+
+| graphene-django-permissions | graphene-django |
+| --- | --- |
+| 1.0.0+ | v3.0.2+ |
+| 0.1.0 | v2 |
 
 ## Motivation
 

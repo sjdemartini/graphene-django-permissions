@@ -38,8 +38,8 @@ class GrapheneAuthorizationMiddleware:
         result = next(root, info, **args)
 
         # Given the resulting value, check whether the current user has view access
-        if isinstance(result.value, models.Model):
-            if not has_permission_to_view_model_object(info.context.user, result.value):
+        if isinstance(result, models.Model):
+            if not has_permission_to_view_model_object(info.context.user, result):
                 # The user does not have access to all objects for this model, nor this
                 # specific object. As such, return null for this field.
 
@@ -55,8 +55,8 @@ class GrapheneAuthorizationMiddleware:
 
                 return None
 
-        elif isinstance(result.value, models.QuerySet):
-            model = result.value.model
+        elif isinstance(result, models.QuerySet):
+            model = result.model
             permission = get_view_permission_for_model(model)
             if not info.context.user.has_perm(permission):
                 # The user does not have access to all objects for this model, so we'll
@@ -68,11 +68,11 @@ class GrapheneAuthorizationMiddleware:
                 # here, unlike if we were to use a `filter` on the queryset or similar.
                 return [
                     obj
-                    for obj in result.value
+                    for obj in result
                     if info.context.user.has_perm(permission, obj=obj)
                 ]
 
-        elif isinstance(result.value, (list, tuple, set)):
+        elif isinstance(result, (list, tuple, set)):
             # Sometimes queries may return a list or other iterable of models, rather
             # than a QuerySet of models (e.g., if they performed some in-memory
             # filtering on a queryset and implicitly converted to a list themselves). In
@@ -81,7 +81,7 @@ class GrapheneAuthorizationMiddleware:
             # model object that the user has permission to view.
             return [
                 obj
-                for obj in result.value
+                for obj in result
                 if not isinstance(obj, models.Model)
                 or has_permission_to_view_model_object(info.context.user, obj)
             ]
