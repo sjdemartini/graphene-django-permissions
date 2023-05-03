@@ -4,15 +4,20 @@
   "files.trimFinalNewlines": true,
   "files.insertFinalNewline": true,
   "[python]": {
+    // We have Ruff fix all issues on save, and then format the code with black
+    // (https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff). We
+    // don't need to separately "organize imports", since ruff does this automatically
+    // as a part of auto-fixing "I" rules, per our ruff configuration.
+    "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": true
+      "source.fixAll.ruff": true,
+      "source.organizeImports": false
     },
     "editor.defaultFormatter": "ms-python.python",
-    "editor.formatOnSave": true,
     "editor.tabSize": 4
   },
   "python.formatting.provider": "black",
-  "python.linting.flake8Enabled": true,
+  "python.linting.flake8Enabled": false,
   "python.linting.mypyEnabled": true,
   "python.linting.enabled": true,
   "python.testing.unittestEnabled": false,

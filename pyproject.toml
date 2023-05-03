@@ -31,12 +31,11 @@ graphene-django = ">=3.0.2"
 
 [tool.poetry.dev-dependencies]
 black = "22.12.0"
-isort = "^5.10.1"
-flake8 = "^4.0.1"
 mypy = "^0.950"
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
 pytest-django = "^4.5.2"
+ruff = "0.0.264"
 tox = "^3.25.0"
 twine = "^4.0.0"
 pre-commit = "^2.19.0"
@@ -78,19 +77,54 @@ exclude = '''
 )
 '''
 
-[tool.isort]
-# Per https://pycqa.github.io/isort/docs/configuration/compatibility_black/ and
-# https://github.com/psf/black/blob/1d8b4d766d912c7b9e91fa885419730c334345ef/docs/compatible_configs.md#isort
-profile = "black"
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-line_length = 88
-skip_gitignore = true
-extend_skip_glob = ["*/migrations/*"]
+[tool.ruff]
+select = [
+  "E",
+  "F",
+  "W",
+  "I", # isort
+  "B", # flake8-bugbear
+  "DJ", # flake8-django
+  "UP", # pyupgrade
+  "C4", # unnecessary comprehensions (formerly handled by pyupgrade)
+  "RUF", # Ruff-specific lint-rules https://beta.ruff.rs/docs/rules/#ruff-specific-rules-ruf
+]
+ignore = [
+  # Don't enforce max line length, since black handles line-length automatically for
+  # code, and disagrees with ruff/flake8 in certain situations
+  "E501",
+  # Disable the opinionated bugbear rules
+  "B9",
+  # Disable warnings about using __all__ for fields in Django admin
+  # (https://beta.ruff.rs/docs/rules/django-all-with-model-form/), since the concern is
+  # minor
+  "DJ007",
+  # Disable some "ambiguous unicode char" rules since we're fine with curly quotes
+  "RUF001",
+  "RUF002",
+  "RUF003",
+]
+line-length = 88
+exclude = [
+    ".git",
+    "__pycache__",
+    "setup.py",
+    "build",
+    "dist",
+    "docs",
+    "releases",
+    ".venv",
+    ".tox",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".vscode",
+    ".github",
+    ".coverage",
+    "*/migrations/*",
+]
+# Always generate Python 3.7-compatible code.
+target-version = "py37"
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.ruff.per-file-ignores]
+# Ignore warnings about model definitions needing __str__ in the test context
+"tests/**/*" = ["DJ008"]
