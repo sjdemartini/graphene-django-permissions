@@ -4,11 +4,10 @@ sources = graphene_django_permissions
 test: format lint unittest
 
 format:
-	poetry run isort $(sources) tests
 	poetry run black $(sources) tests
 
 lint:
-	poetry run flake8 $(sources) tests
+	poetry run ruff .
 	poetry run mypy $(sources) tests
 
 unittest:
