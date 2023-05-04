@@ -107,10 +107,19 @@ To run a subset of tests:
 $ poetry run pytest tests/test_middleware.py
 ```
 
+## Testing the latest build from the `main` branch
 
-## Deploying
+Every time a commit is added to the `main` branch, we build and publish a version of the
+package to the TestPyPI instance. To test *installing* that latest published version,
+per https://packaging.python.org/en/latest/guides/using-testpypi/, run:
 
-A reminder for the maintainers on how to deploy.
+```shell
+python3 -m pip install --index-url https://test.pypi.org/simple/ graphene-django-permissions -U
+```
+
+## Publishing
+
+A reminder for the maintainers on how to publish the package.
 Make sure all your changes are committed (including an entry in CHANGELOG.md).
 Then run:
 
@@ -120,4 +129,4 @@ $ git push
 $ git push --tags
 ```
 
-GitHub Actions will then deploy to PyPI if tests pass.
+GitHub Actions will then publish to PyPI if tests pass.
