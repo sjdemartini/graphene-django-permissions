@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "graphene-django-permissions"
-version = "0.1.0"
+version = "1.0.0"
 homepage = "https://github.com/sjdemartini/graphene-django-permissions"
 description = "A performant holistic permissions layer for graphene-django/GraphQL."
 authors = ["Steven DeMartini <sjdemartini@users.noreply.github.com>"]
