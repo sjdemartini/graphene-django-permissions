@@ -39,3 +39,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 ROOT_URLCONF = "tests.urls"
 WSGI_APPLICATION = "tests.wsgi.application"
+
+USE_TZ = True
