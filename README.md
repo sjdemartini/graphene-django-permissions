@@ -84,7 +84,7 @@ This was originally inspired by the popular JS library, [graphql-shield](https:/
 
 This library/middleware is **not** used for restricting access to route-level checks (i.e., individual queries or mutations). Instead, it is designed to ensure that no matter which query or mutation is used, the data returned to the user only includes models they're authorized to see.
 
-To apply permissioning to a particular query or mutation (for instance, to only allow certain users to mutate some a model), you can use standard Graphene/python logic, like:
+To apply permissioning to a particular query or mutation (for instance, to only allow certain users to mutate some model), you can use standard Graphene/python logic, like:
 
 ```python
 class UpdateUser(graphene.Mutation):
