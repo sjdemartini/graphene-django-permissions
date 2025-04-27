@@ -1,5 +1,9 @@
 # graphene-django-permissions
 
+**NOTE:** This project is no longer maintained. `graphene-django` itself hasn't had dedicated/active maintenance since ~2020, so if you are looking to use GraphQL with Python and Django, I would recommend instead investigating other options, like [`strawberry`](https://strawberry.rocks/) and [`strawberry-django`](https://github.com/strawberry-graphql/strawberry-django).
+
+---
+
 [![pypi](https://img.shields.io/pypi/v/graphene-django-permissions.svg)](https://pypi.org/project/graphene-django-permissions/)
 [![python](https://img.shields.io/pypi/pyversions/graphene-django-permissions.svg)](https://pypi.org/project/graphene-django-permissions/)
 [![Build Status](https://github.com/sjdemartini/graphene-django-permissions/actions/workflows/dev.yml/badge.svg)](https://github.com/sjdemartini/graphene-django-permissions/actions/workflows/dev.yml)
